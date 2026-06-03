@@ -6,13 +6,13 @@
     <title>Luna-Path | Advanced Celestial Tracking HUD</title>
     <style>
         :root {
-            --bg-dark: #030712;
-            --panel-bg: rgba(11, 17, 34, 0.75);
+            --bg-dark: #02040a;
+            --panel-bg: rgba(10, 15, 30, 0.8);
             --neon-blue: #00f0ff;
-            --neon-purple: #bc6ff1;
+            --neon-purple: #bd5fff;
             --text-main: #f1f5f9;
-            --text-muted: #64748b;
-            --border-glow: rgba(0, 240, 255, 0.15);
+            --text-muted: #4b5563;
+            --border-glow: rgba(0, 240, 255, 0.2);
         }
 
         body {
@@ -29,7 +29,6 @@
             position: relative;
         }
 
-        /* Ambient Space Background Layers */
         #star-canvas {
             position: fixed;
             top: 0;
@@ -37,16 +36,16 @@
             width: 100vw;
             height: 100vh;
             z-index: -2;
-            pointer-events: none;
+            pointer-events: auto;
         }
 
         .nebula {
             position: fixed;
-            top: 20%;
+            top: 30%;
             left: 50%;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(188,111,241,0.08) 0%, transparent 70%);
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(189, 95, 255, 0.06) 0%, transparent 70%);
             z-index: -1;
             transform: translate(-50%, -50%);
             pointer-events: none;
@@ -58,14 +57,15 @@
             width: 100%;
             max-width: 1200px;
             z-index: 10;
+            pointer-events: none;
         }
 
         h1 {
             color: var(--neon-blue);
-            font-size: 2.8rem;
-            letter-spacing: 6px;
+            font-size: 3rem;
+            letter-spacing: 8px;
             margin: 0 0 5px 0;
-            text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
             font-weight: 800;
         }
 
@@ -73,8 +73,17 @@
             color: var(--neon-purple);
             text-transform: uppercase;
             font-size: 0.95rem;
-            letter-spacing: 8px;
+            letter-spacing: 10px;
             font-weight: 600;
+            text-shadow: 0 0 10px rgba(189, 95, 255, 0.4);
+        }
+
+        #hud-clock {
+            font-family: 'Courier New', monospace;
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
         }
 
         .grid-container {
@@ -83,7 +92,7 @@
             gap: 25px;
             width: 100%;
             max-width: 1200px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             z-index: 10;
         }
 
@@ -92,12 +101,11 @@
             border: 1px solid var(--border-glow);
             border-radius: 16px;
             padding: 24px;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
-            overflow: hidden;
         }
 
         .panel::before {
@@ -108,13 +116,12 @@
             width: 100%;
             height: 3px;
             background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
-            opacity: 0.5;
         }
 
         .panel:hover {
             border-color: var(--neon-purple);
-            box-shadow: 0 0 25px rgba(188, 111, 241, 0.25);
-            transform: translateY(-4px);
+            box-shadow: 0 0 30px rgba(189, 95, 255, 0.3);
+            transform: translateY(-5px);
         }
 
         .panel-title {
@@ -124,9 +131,6 @@
             padding-bottom: 12px;
             margin-top: 0;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
             letter-spacing: 1.5px;
             font-weight: 600;
             text-transform: uppercase;
@@ -140,12 +144,8 @@
             font-size: 0.95rem;
         }
 
-        .data-row:last-child {
-            margin-bottom: 0;
-        }
-
         .data-label {
-            color: var(--text-muted);
+            color: #94a3b8;
             font-weight: 500;
         }
 
@@ -153,19 +153,38 @@
             font-family: 'Courier New', Courier, monospace;
             color: #ffffff;
             font-weight: 700;
-            text-shadow: 0 0 4px rgba(255,255,255,0.2);
+        }
+
+        .sync-btn {
+            background: transparent;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+
+        .sync-btn:hover {
+            background: var(--neon-blue);
+            color: var(--bg-dark);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+            transform: scale(1.05);
         }
 
         .spot-item {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border-left: 3px solid var(--neon-purple);
-            padding: 10px 14px;
+            padding: 12px;
             margin-bottom: 12px;
             border-radius: 0 8px 8px 0;
-        }
-
-        .spot-item:last-child {
-            margin-bottom: 0;
         }
 
         .spot-header {
@@ -178,13 +197,37 @@
 
         .spot-desc {
             font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-            line-height: 1.3;
+            color: #94a3b8;
+            margin-top: 5px;
+            line-height: 1.4;
         }
 
         .highlight-blue { color: var(--neon-blue); text-shadow: 0 0 8px rgba(0,240,255,0.4); }
-        .highlight-purple { color: var(--neon-purple); text-shadow: 0 0 8px rgba(188,111,241,0.4); }
+        .highlight-purple { color: var(--neon-purple); text-shadow: 0 0 12px rgba(189,95,255,0.8); font-weight: 800; }
+
+        footer {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 25px;
+            width: 100%;
+            max-width: 1200px;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .creators {
+            color: #64748b;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .creator-names {
+            margin-top: 8px;
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+        }
     </style>
 </head>
 <body>
@@ -195,6 +238,7 @@
     <header>
         <h1>🌙 LUNA-PATH</h1>
         <div class="subtitle">Celestial Tracking HUD</div>
+        <div id="hud-clock">SYSTEM TIME: SYNCING...</div>
     </header>
 
     <div class="grid-container">
@@ -246,25 +290,27 @@
                         <span>Denkanikottai Hills</span>
                         <span class="highlight-purple">~80 km</span>
                     </div>
-                    <div class="spot-desc">Bortle 3 Dark Sky zone. Pristine horizon line south of Hosur; perfect for resolving planetary discs and nebulae.</div>
+                    <div class="spot-desc">Bortle 3 Dark Sky zone. Pristine horizon line south of Hosur; perfect for resolving planetary discs.</div>
                 </div>
                 <div class="spot-item">
                     <div class="spot-header">
                         <span>Chiguru Organic Farm</span>
                         <span class="highlight-purple">~65 km</span>
                     </div>
-                    <div class="spot-desc">Secluded rural zone matching specific astronomy club meetups. Free from central Bengaluru's light dome pollution.</div>
+                    <div class="spot-desc">Secluded rural zone matching specific astronomy club meetups. Free from central city light pollution.</div>
                 </div>
                 <div class="spot-item">
                     <div class="spot-header">
                         <span>Skandagiri Base</span>
                         <span class="highlight-purple">~70 km</span>
                     </div>
-                    <div class="spot-desc">High altitude clearing north of the city. Exceptional view vectors for northern constellations and early dawn transits.</div>
+                    <div class="spot-desc">High altitude clearing north of the city. Exceptional view vectors for early dawn transits.</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <button class="sync-btn" onclick="triggerSync()">📡 Request Orbital Sync</button>
 
     <footer>
         <div class="creators">
@@ -274,10 +320,12 @@
     </footer>
 
     <script>
-        // --- STARFIELD BACKGROUND LOGIC ---
+        // --- STARFIELD & INTERACTIVE MOVING VECTORS ENGINE ---
         const canvas = document.getElementById('star-canvas');
         const ctx = canvas.getContext('2d');
         let stars = [];
+        let shootingStar = null;
+        let mouse = { x: null, y: null, maxDistance: 120 };
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -287,32 +335,105 @@
 
         function initStars() {
             stars = [];
-            const starCount = Math.floor((canvas.width * canvas.height) / 3000);
+            const starCount = Math.floor((canvas.width * canvas.height) / 4000);
             for(let i = 0; i < starCount; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.5,
+                    radius: 1 + Math.random() * 1.5,
+                    // Velocity vectors for dynamic ambient movement
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
                     alpha: Math.random(),
-                    speed: 0.01 + Math.random() * 0.02
+                    speed: 0.005 + Math.random() * 0.01
                 });
             }
         }
 
+        // Capture pointer coordinates over the interactive viewport
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        function spawnShootingStar() {
+            if (shootingStar) return;
+            shootingStar = {
+                x: Math.random() * canvas.width,
+                y: Math.random() * (canvas.height / 2),
+                len: 30 + Math.random() * 40,
+                speed: 12 + Math.random() * 12,
+                dx: -(6 + Math.random() * 4),
+                dy: 6 + Math.random() * 4,
+                alpha: 1
+            };
+            setTimeout(spawnShootingStar, 5000 + Math.random() * 8000);
+        }
+
         function drawStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#ffffff';
             
+            // 1. Render and recalculate moving vector stars
             stars.forEach(star => {
+                star.x += star.vx;
+                star.y += star.vy;
+
+                // Screen boundary warp loop
+                if (star.x < 0) star.x = canvas.width;
+                if (star.x > canvas.width) star.x = 0;
+                if (star.y < 0) star.y = canvas.height;
+                if (star.y > canvas.height) star.y = 0;
+
                 star.alpha += star.speed;
-                if(star.alpha > 1 || star.alpha < 0) {
-                    star.speed = -star.speed;
-                }
+                if(star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+
+                ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
                 ctx.globalAlpha = Math.abs(star.alpha);
                 ctx.fill();
+
+                // 2. Compute real-time vector connection webs to cursor position
+                if (mouse.x !== null && mouse.y !== null) {
+                    let dx = star.x - mouse.x;
+                    let dy = star.y - mouse.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < mouse.maxDistance) {
+                        // Proxy alpha opacity proportional to absolute intercept distance
+                        let lineAlpha = (1 - (dist / mouse.maxDistance)) * 0.25;
+                        ctx.strokeStyle = `rgba(0, 240, 255, ${lineAlpha})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(star.x, star.y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.stroke();
+                    }
+                }
             });
+
+            // 3. Render meteor events
+            if (shootingStar) {
+                ctx.strokeStyle = 'rgba(0, 240, 255, ' + shootingStar.alpha + ')';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(shootingStar.x, shootingStar.y);
+                ctx.lineTo(shootingStar.x + shootingStar.dx, shootingStar.y + shootingStar.dy);
+                ctx.stroke();
+
+                shootingStar.x += shootingStar.dx;
+                shootingStar.y += shootingStar.dy;
+                shootingStar.alpha -= 0.02;
+
+                if (shootingStar.alpha <= 0 || shootingStar.x < 0 || shootingStar.y > canvas.height) {
+                    shootingStar = null;
+                }
+            }
             ctx.globalAlpha = 1.0;
             requestAnimationFrame(drawStars);
         }
@@ -320,40 +441,47 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
         drawStars();
+        setTimeout(spawnShootingStar, 3000);
 
-        // --- REAL-TIME DATA PROCESSING PIPELINE ---
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                
-                document.getElementById('lat-val').innerText = lat.toFixed(4) + "° N";
-                document.getElementById('lon-val').innerText = lon.toFixed(4) + "° E";
-
-                // Reverse geocoding to capture exact sub-locality profile
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
-                    .then(res => res.json())
-                    .then(geoData => {
-                        const suburb = geoData.address.suburb || geoData.address.neighbourhood || "Bengaluru Central";
-                        document.getElementById('loc-name').innerText = `${suburb}, Bengaluru`;
-                    }).catch(() => {
-                        document.getElementById('loc-name').innerText = "Bengaluru, IN";
-                    });
-
-                // Connect telemetry parameters down to running Java Controller endpoints
-                fetch(`/api/celestial/visible?lat=${lat}&lon=${lon}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if(data.moonPhase) document.getElementById('moon-phase').innerText = data.moonPhase;
-                    }).catch(() => {
-                        console.log("Using live astronomical horizon charts...");
-                    });
-            }, () => {
-                document.getElementById('loc-name').innerText = "Bengaluru, IN (Default)";
-                document.getElementById('lat-val').innerText = "12.9716° N";
-                document.getElementById('lon-val').innerText = "77.5946° E";
-            });
+        // --- HUD CLOCK ENGINE ---
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('hud-clock').innerText = "SYSTEM TIME: " + now.toLocaleTimeString();
         }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- TELEMETRY TRACKING PIPELINE ---
+        function triggerSync() {
+            const locLabel = document.getElementById('loc-name');
+            locLabel.innerText = "REFRESHING MATCH...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    document.getElementById('lat-val').innerText = lat.toFixed(4) + "° N";
+                    document.getElementById('lon-val').innerText = lon.toFixed(4) + "° E";
+
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                        .then(res => res.json())
+                        .then(geoData => {
+                            const suburb = geoData.address.suburb || geoData.address.neighbourhood || "Bengaluru Central";
+                            locLabel.innerText = `${suburb}, Bengaluru`;
+                        }).catch(() => {
+                            locLabel.innerText = "Bengaluru, IN";
+                        });
+
+                    fetch(`/api/celestial/visible?lat=${lat}&lon=${lon}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data.moonPhase) document.getElementById('moon-phase').innerText = data.moonPhase;
+                        });
+                });
+            }
+        }
+        triggerSync();
     </script>
 </body>
 </html>
