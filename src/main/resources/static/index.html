@@ -10,6 +10,7 @@
             --panel-bg: rgba(10, 15, 30, 0.8);
             --neon-blue: #00f0ff;
             --neon-purple: #bd5fff;
+            --neon-green: #39ff14;
             --text-main: #f1f5f9;
             --text-muted: #4b5563;
             --border-glow: rgba(0, 240, 255, 0.2);
@@ -153,6 +154,34 @@
             font-family: 'Courier New', Courier, monospace;
             color: #ffffff;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-pill {
+            font-size: 0.7rem;
+            background: rgba(57, 255, 20, 0.1);
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            padding: 1px 6px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            animation: pulse 2s infinite;
+        }
+
+        .sub-pill {
+            font-size: 0.7rem;
+            color: #64748b;
+            border: 1px solid #334155;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; text-shadow: 0 0 8px var(--neon-green); }
+            100% { opacity: 0.6; }
         }
 
         .sync-btn {
@@ -266,19 +295,19 @@
             </div>
             <div class="data-row">
                 <span class="data-label">Venus Window:</span>
-                <span class="data-value highlight-blue">06:45 PM - 09:20 PM</span>
+                <span class="data-value"><span id="v-pill" class="sub-pill">BELOW HORIZON</span> 18:45 - 21:20</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Jupiter Window:</span>
-                <span class="data-value highlight-blue">06:45 PM - 09:41 PM</span>
+                <span class="data-value"><span id="j-pill" class="sub-pill">BELOW HORIZON</span> 18:45 - 21:41</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Saturn Window:</span>
-                <span class="data-value">02:14 AM - 05:15 AM</span>
+                <span class="data-value"><span id="s-pill" class="sub-pill">BELOW HORIZON</span> 02:14 - 05:15</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Mars Window:</span>
-                <span class="data-value">03:52 AM - 05:15 AM</span>
+                <span class="data-value"><span id="m-pill" class="sub-pill">BELOW HORIZON</span> 03:52 - 05:15</span>
             </div>
         </div>
 
@@ -341,7 +370,6 @@
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
                     radius: 1 + Math.random() * 1.5,
-                    // Velocity vectors for dynamic ambient movement
                     vx: (Math.random() - 0.5) * 0.3,
                     vy: (Math.random() - 0.5) * 0.3,
                     alpha: Math.random(),
@@ -350,7 +378,6 @@
             }
         }
 
-        // Capture pointer coordinates over the interactive viewport
         window.addEventListener('mousemove', (e) => {
             mouse.x = e.clientX;
             mouse.y = e.clientY;
@@ -366,24 +393,23 @@
             shootingStar = {
                 x: Math.random() * canvas.width,
                 y: Math.random() * (canvas.height / 2),
-                len: 30 + Math.random() * 40,
-                speed: 12 + Math.random() * 12,
-                dx: -(6 + Math.random() * 4),
-                dy: 6 + Math.random() * 4,
+                len: 35 + Math.random() * 45,
+                speed: 14 + Math.random() * 10,
+                dx: -(7 + Math.random() * 3),
+                dy: 7 + Math.random() * 3,
                 alpha: 1
             };
-            setTimeout(spawnShootingStar, 5000 + Math.random() * 8000);
+            // MUCH FASTER TIMER: Spawns a new meteor every 1 to 4 seconds instead of 12!
+            setTimeout(spawnShootingStar, 1000 + Math.random() * 3000);
         }
 
         function drawStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 1. Render and recalculate moving vector stars
             stars.forEach(star => {
                 star.x += star.vx;
                 star.y += star.vy;
 
-                // Screen boundary warp loop
                 if (star.x < 0) star.x = canvas.width;
                 if (star.x > canvas.width) star.x = 0;
                 if (star.y < 0) star.y = canvas.height;
@@ -398,14 +424,12 @@
                 ctx.globalAlpha = Math.abs(star.alpha);
                 ctx.fill();
 
-                // 2. Compute real-time vector connection webs to cursor position
                 if (mouse.x !== null && mouse.y !== null) {
                     let dx = star.x - mouse.x;
                     let dy = star.y - mouse.y;
                     let dist = Math.sqrt(dx * dx + dy * dy);
 
                     if (dist < mouse.maxDistance) {
-                        // Proxy alpha opacity proportional to absolute intercept distance
                         let lineAlpha = (1 - (dist / mouse.maxDistance)) * 0.25;
                         ctx.strokeStyle = `rgba(0, 240, 255, ${lineAlpha})`;
                         ctx.lineWidth = 1;
@@ -417,7 +441,6 @@
                 }
             });
 
-            // 3. Render meteor events
             if (shootingStar) {
                 ctx.strokeStyle = 'rgba(0, 240, 255, ' + shootingStar.alpha + ')';
                 ctx.lineWidth = 2;
@@ -428,7 +451,7 @@
 
                 shootingStar.x += shootingStar.dx;
                 shootingStar.y += shootingStar.dy;
-                shootingStar.alpha -= 0.02;
+                shootingStar.alpha -= 0.03; // Slightly faster fade for snappier action
 
                 if (shootingStar.alpha <= 0 || shootingStar.x < 0 || shootingStar.y > canvas.height) {
                     shootingStar = null;
@@ -441,15 +464,35 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
         drawStars();
-        setTimeout(spawnShootingStar, 3000);
+        setTimeout(spawnShootingStar, 1500);
 
-        // --- HUD CLOCK ENGINE ---
-        function updateClock() {
+        // --- HUD CLOCK & REAL-TIME VISIBILITY ENGINE ---
+        function updateClockAndVisibility() {
             const now = new Date();
             document.getElementById('hud-clock').innerText = "SYSTEM TIME: " + now.toLocaleTimeString();
+
+            const hour = now.getHours();
+            const min = now.getMinutes();
+            const currentTimeDec = hour + (min / 60);
+
+            const checkVisible = (start, end, pillId) => {
+                const pill = document.getElementById(pillId);
+                if (currentTimeDec >= start && currentTimeDec <= end) {
+                    pill.innerText = "NOW VISIBLE";
+                    pill.className = "live-pill";
+                } else {
+                    pill.innerText = "BELOW HORIZON";
+                    pill.className = "sub-pill";
+                }
+            };
+
+            checkVisible(18.75, 21.33, 'v-pill'); // Venus
+            checkVisible(18.75, 21.68, 'j-pill'); // Jupiter
+            checkVisible(2.23, 5.25, 's-pill');   // Saturn
+            checkVisible(3.86, 5.25, 'm-pill');   // Mars
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        setInterval(updateClockAndVisibility, 1000);
+        updateClockAndVisibility();
 
         // --- TELEMETRY TRACKING PIPELINE ---
         function triggerSync() {
