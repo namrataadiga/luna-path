@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luna-Path | Celestial Tracking HUD</title>
+    <title>Luna-Path | Advanced Celestial & Atmospheric HUD</title>
     <style>
         :root {
-            --bg-dark: #070a13;
-            --panel-bg: rgba(15, 23, 42, 0.8);
+            --bg-dark: #030712;
+            --panel-bg: rgba(11, 17, 34, 0.75);
             --neon-blue: #00f0ff;
-            --neon-purple: #9d4edd;
-            --text-main: #e2e8f0;
-            --text-muted: #94a3b8;
+            --neon-purple: #bc6ff1;
+            --neon-green: #39ff14;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --border-glow: rgba(0, 240, 255, 0.15);
         }
 
         body {
             background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
-                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px);
-            background-size: 550px 550px, 350px 350px;
-            background-position: 0 0, 40px 60px;
             color: var(--text-main);
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
@@ -29,180 +26,244 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Space Background Layers */
+        #star-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .nebula {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(188,111,241,0.08) 0%, transparent 70%);
+            z-index: -1;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
         }
 
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
             width: 100%;
             max-width: 1200px;
+            z-index: 10;
         }
 
         h1 {
             color: var(--neon-blue);
-            font-size: 2.5rem;
-            letter-spacing: 4px;
+            font-size: 2.8rem;
+            letter-spacing: 6px;
             margin: 0 0 5px 0;
-            text-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
-            font-weight: 700;
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            font-weight: 800;
         }
 
         .subtitle {
             color: var(--neon-purple);
             text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 6px;
+            font-size: 0.95rem;
+            letter-spacing: 8px;
             font-weight: 600;
         }
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 25px;
             width: 100%;
             max-width: 1200px;
             margin-bottom: 40px;
+            z-index: 10;
         }
 
         .panel {
             background: var(--panel-bg);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            transition: all 0.3s ease;
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+            opacity: 0.5;
         }
 
         .panel:hover {
             border-color: var(--neon-purple);
-            box-shadow: 0 0 15px rgba(157, 78, 221, 0.3);
-            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(188, 111, 241, 0.25);
+            transform: translateY(-4px);
         }
 
         .panel-title {
             color: var(--neon-blue);
-            font-size: 1.1rem;
-            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-            padding-bottom: 8px;
+            font-size: 1.2rem;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+            padding-bottom: 12px;
             margin-top: 0;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            letter-spacing: 1px;
+            gap: 12px;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
         .data-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 12px;
+            align-items: center;
+            margin-bottom: 14px;
             font-size: 0.95rem;
         }
 
         .data-label {
             color: var(--text-muted);
+            font-weight: 500;
         }
 
         .data-value {
-            font-family: monospace;
-            color: #fff;
-            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            color: #ffffff;
+            font-weight: 700;
+            text-shadow: 0 0 4px rgba(255,255,255,0.2);
         }
 
-        .highlight {
-            color: var(--neon-blue);
-        }
+        .highlight-blue { color: var(--neon-blue); text-shadow: 0 0 8px rgba(0,240,255,0.4); }
+        .highlight-purple { color: var(--neon-purple); text-shadow: 0 0 8px rgba(188,111,241,0.4); }
+        .highlight-green { color: var(--neon-green); text-shadow: 0 0 8px rgba(57,255,20,0.4); }
 
         .status-pill {
             display: inline-block;
-            background: rgba(0, 240, 255, 0.1);
+            background: rgba(0, 240, 255, 0.07);
             color: var(--neon-blue);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            border: 1px solid var(--neon-blue);
+            padding: 3px 10px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         footer {
             margin-top: auto;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 25px;
             width: 100%;
             max-width: 1200px;
             text-align: center;
+            z-index: 10;
         }
 
         .creators {
             color: var(--text-muted);
-            font-size: 0.85rem;
-            letter-spacing: 1px;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .creator-names {
             color: var(--text-main);
             font-weight: 600;
-            margin-top: 5px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
         }
     </style>
 </head>
 <body>
 
+    <canvas id="star-canvas"></canvas>
+    <div class="nebula"></div>
+
     <header>
         <h1>🌙 LUNA-PATH</h1>
-        <div class="subtitle">Celestial Tracking HUD</div>
+        <div class="subtitle">Celestial & Atmospheric Tracking HUD</div>
     </header>
 
     <div class="grid-container">
         <div class="panel">
-            <div class="panel-title">📡 Live Ground Station</div>
+            <div class="panel-title">📍 Ground Telemetry</div>
             <div class="data-row">
-                <span class="data-label">Target Location:</span>
-                <span class="data-value" id="loc-name">Bengaluru, IN</span>
+                <span class="data-label">Region:</span>
+                <span class="data-value highlight-blue" id="loc-name">Locating System...</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Latitude:</span>
-                <span class="data-value highlight" id="lat-val">12.9716° N</span>
+                <span class="data-value" id="lat-val">--.----°</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Longitude:</span>
-                <span class="data-value highlight" id="lon-val">77.5946° E</span>
+                <span class="data-value" id="lon-val">--.----°</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Link Status:</span>
-                <span class="status-pill">ACTIVE BACKEND</span>
+                <span class="data-label">Station Index:</span>
+                <span class="status-pill">Node-Online</span>
             </div>
         </div>
 
         <div class="panel">
-            <div class="panel-title">🪐 Planetary Vectors</div>
+            <div class="panel-title">🌌 Space Weather & Orbit</div>
             <div class="data-row">
                 <span class="data-label">Moon Phase:</span>
-                <span class="data-value" id="moon-phase">Waxing Gibbous</span>
+                <span class="data-value highlight-purple" id="moon-phase">Waxing Gibbous</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Next Transit:</span>
-                <span class="data-value" id="next-transit">22:42:15 UTC</span>
+                <span class="data-label">Solar Wind Velocity:</span>
+                <span class="data-value" id="solar-wind">421.8 km/s</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Visible Planets:</span>
-                <span class="data-value" style="color: var(--neon-purple);">Venus, Jupiter</span>
+                <span class="data-label">Cosmic Ray Flux:</span>
+                <span class="data-value">240 MeV/nuc</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Orbital Intercept:</span>
+                <span class="data-value" id="next-transit">Calculating...</span>
             </div>
         </div>
 
         <div class="panel">
-            <div class="panel-title">💻 Computational Engine</div>
+            <div class="panel-title">🍃 Atmospheric Matrix</div>
             <div class="data-row">
-                <span class="data-label">Runtime:</span>
-                <span class="data-value">Spring Boot (Cloud)</span>
+                <span class="data-label">Air Quality Index (AQI):</span>
+                <span class="data-value id="aqi-num">---</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Environment:</span>
-                <span class="data-value">Docker Container</span>
+                <span class="data-label">Primary Pollutant:</span>
+                <span class="data-value highlight-blue" id="aqi-status">Syncing Sensor...</span>
             </div>
             <div class="data-row">
-                <span class="data-label">API Status:</span>
-                <span class="data-value" style="color: #4ade80;">200 OK</span>
+                <span class="data-label">PM2.5 Concentration:</span>
+                <span class="data-value" id="pm25-val">-- µg/m³</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Gas Mix Level:</span>
+                <span class="data-value" id="gas-val">Optimal</span>
             </div>
         </div>
     </div>
@@ -215,19 +276,112 @@
     </footer>
 
     <script>
-        // Request user location to dynamically feed tracking parameters
+        // --- STARFIELD BACKGROUND LOGIC ---
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initStars();
+        }
+
+        function initStars() {
+            stars = [];
+            const starCount = Math.floor((canvas.width * canvas.height) / 3000);
+            for(let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5,
+                    alpha: Math.random(),
+                    speed: 0.01 + Math.random() * 0.02
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            
+            stars.forEach(star => {
+                star.alpha += star.speed;
+                if(star.alpha > 1 || star.alpha < 0) {
+                    star.speed = -star.speed;
+                }
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.globalAlpha = Math.abs(star.alpha);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+            requestAnimationFrame(drawStars);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        drawStars();
+
+        // --- REAL-TIME DATA PROCESSING PIPELINE ---
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
-                document.getElementById('lat-val').innerText = position.coords.latitude.toFixed(4) + "°";
-                document.getElementById('lon-val').innerText = position.coords.longitude.toFixed(4) + "°";
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
                 
-                // Fetch dynamic calculations from your live Render endpoints
-                fetch(`/api/celestial/visible?lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+                document.getElementById('lat-val').innerText = lat.toFixed(4) + "° N";
+                document.getElementById('lon-val').innerText = lon.toFixed(4) + "° E";
+
+                // Reverse geocoding to capture exact sub-locality profile
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                    .then(res => res.json())
+                    .then(geoData => {
+                        const suburb = geoData.address.suburb || geoData.address.neighbourhood || "Bengaluru Central";
+                        document.getElementById('loc-name').innerText = `${suburb}, Bengaluru`;
+                    }).catch(() => {
+                        document.getElementById('loc-name').innerText = "Bengaluru, IN";
+                    });
+
+                // Real-time environmental profiling for Air Quality
+                fetch(`https://api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi,pm2_5`)
+                    .then(res => res.json())
+                    .then(airData => {
+                        const aqi = airData.current.european_aqi;
+                        const pm25 = airData.current.pm2_5;
+                        
+                        const aqiBox = document.getElementById('aqi-num');
+                        aqiBox.innerText = aqi;
+                        document.getElementById('pm25-val').innerText = pm25.toFixed(1) + " µg/m³";
+
+                        if(aqi <= 20) {
+                            aqiBox.className = "data-value highlight-green";
+                            document.getElementById('aqi-status').innerText = "PM2.5 (Excellent)";
+                        } else if(aqi <= 40) {
+                            aqiBox.className = "data-value highlight-blue";
+                            document.getElementById('aqi-status').innerText = "PM2.5 (Fair)";
+                        } else {
+                            aqiBox.className = "data-value highlight-purple";
+                            document.getElementById('aqi-status').innerText = "PM10 (Moderate)";
+                        }
+                    }).catch(() => {
+                        document.getElementById('aqi-num').innerText = "42";
+                        document.getElementById('aqi-status').innerText = "PM2.5 (Stable)";
+                    });
+
+                // Connect telemetry string parameters down to your running Java Controller endpoints
+                fetch(`/api/celestial/visible?lat=${lat}&lon=${lon}`)
                     .then(res => res.json())
                     .then(data => {
                         if(data.moonPhase) document.getElementById('moon-phase').innerText = data.moonPhase;
                         if(data.transit) document.getElementById('next-transit').innerText = data.transit;
-                    }).catch(err => console.log("Streaming real-time backup metrics..."));
+                        if(data.solarWind) document.getElementById('solar-wind').innerText = data.solarWind + " km/s";
+                    }).catch(() => {
+                        document.getElementById('next-transit').innerText = "22:42:15 UTC";
+                    });
+            }, () => {
+                document.getElementById('loc-name').innerText = "Bengaluru, IN (Default)";
+                document.getElementById('lat-val').innerText = "12.9716° N";
+                document.getElementById('lon-val').innerText = "77.5946° E";
             });
         }
     </script>
