@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luna-Path | Advanced Celestial & Atmospheric HUD</title>
+    <title>Luna-Path | Advanced Celestial Tracking HUD</title>
     <style>
         :root {
             --bg-dark: #030712;
             --panel-bg: rgba(11, 17, 34, 0.75);
             --neon-blue: #00f0ff;
             --neon-purple: #bc6ff1;
-            --neon-green: #39ff14;
             --text-main: #f1f5f9;
             --text-muted: #64748b;
             --border-glow: rgba(0, 240, 255, 0.15);
@@ -83,7 +82,7 @@
             grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 25px;
             width: 100%;
-            max-width: 1200px;
+            max-width: 800px;
             margin-bottom: 40px;
             z-index: 10;
         }
@@ -155,7 +154,6 @@
 
         .highlight-blue { color: var(--neon-blue); text-shadow: 0 0 8px rgba(0,240,255,0.4); }
         .highlight-purple { color: var(--neon-purple); text-shadow: 0 0 8px rgba(188,111,241,0.4); }
-        .highlight-green { color: var(--neon-green); text-shadow: 0 0 8px rgba(57,255,20,0.4); }
 
         .status-pill {
             display: inline-block;
@@ -203,7 +201,7 @@
 
     <header>
         <h1>🌙 LUNA-PATH</h1>
-        <div class="subtitle">Celestial & Atmospheric Tracking HUD</div>
+        <div class="subtitle">Celestial Tracking HUD</div>
     </header>
 
     <div class="grid-container">
@@ -234,43 +232,23 @@
                 <span class="data-value highlight-purple" id="moon-phase">Waxing Gibbous</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Solar Wind Velocity:</span>
-                <span class="data-value" id="solar-wind">421.8 km/s</span>
+                <span class="data-label">Visible Planets:</span>
+                <span class="data-value highlight-blue" id="visible-planets">Venus, Jupiter, Mars, Saturn</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Cosmic Ray Flux:</span>
-                <span class="data-value">240 MeV/nuc</span>
+                <span class="data-label">Solar Wind Speed:</span>
+                <span class="data-value" id="solar-wind">421.8 km/s</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Orbital Intercept:</span>
                 <span class="data-value" id="next-transit">Calculating...</span>
             </div>
         </div>
-
-        <div class="panel">
-            <div class="panel-title">🍃 Atmospheric Matrix</div>
-            <div class="data-row">
-                <span class="data-label">Air Quality Index (AQI):</span>
-                <span class="data-value id="aqi-num">---</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">Primary Pollutant:</span>
-                <span class="data-value highlight-blue" id="aqi-status">Syncing Sensor...</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">PM2.5 Concentration:</span>
-                <span class="data-value" id="pm25-val">-- µg/m³</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">Gas Mix Level:</span>
-                <span class="data-value" id="gas-val">Optimal</span>
-            </div>
-        </div>
     </div>
 
     <footer>
         <div class="creators">
-            DEVELOPED BY THE GRADIENT CORE TEAM:
+            DEVELOPED BY THE CORE TEAM:
             <div class="creator-names">N HARSHITHA • NAMRATA ADIGA • PUNYA SUBEDAR • SAMIKSHA VARUNI</div>
         </div>
     </footer>
@@ -342,32 +320,6 @@
                         document.getElementById('loc-name').innerText = "Bengaluru, IN";
                     });
 
-                // Real-time environmental profiling for Air Quality
-                fetch(`https://api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi,pm2_5`)
-                    .then(res => res.json())
-                    .then(airData => {
-                        const aqi = airData.current.european_aqi;
-                        const pm25 = airData.current.pm2_5;
-                        
-                        const aqiBox = document.getElementById('aqi-num');
-                        aqiBox.innerText = aqi;
-                        document.getElementById('pm25-val').innerText = pm25.toFixed(1) + " µg/m³";
-
-                        if(aqi <= 20) {
-                            aqiBox.className = "data-value highlight-green";
-                            document.getElementById('aqi-status').innerText = "PM2.5 (Excellent)";
-                        } else if(aqi <= 40) {
-                            aqiBox.className = "data-value highlight-blue";
-                            document.getElementById('aqi-status').innerText = "PM2.5 (Fair)";
-                        } else {
-                            aqiBox.className = "data-value highlight-purple";
-                            document.getElementById('aqi-status').innerText = "PM10 (Moderate)";
-                        }
-                    }).catch(() => {
-                        document.getElementById('aqi-num').innerText = "42";
-                        document.getElementById('aqi-status').innerText = "PM2.5 (Stable)";
-                    });
-
                 // Connect telemetry string parameters down to your running Java Controller endpoints
                 fetch(`/api/celestial/visible?lat=${lat}&lon=${lon}`)
                     .then(res => res.json())
@@ -375,6 +327,7 @@
                         if(data.moonPhase) document.getElementById('moon-phase').innerText = data.moonPhase;
                         if(data.transit) document.getElementById('next-transit').innerText = data.transit;
                         if(data.solarWind) document.getElementById('solar-wind').innerText = data.solarWind + " km/s";
+                        if(data.planets) document.getElementById('visible-planets').innerText = data.planets;
                     }).catch(() => {
                         document.getElementById('next-transit').innerText = "22:42:15 UTC";
                     });
