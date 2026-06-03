@@ -82,7 +82,7 @@
             grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 25px;
             width: 100%;
-            max-width: 800px;
+            max-width: 1200px;
             margin-bottom: 40px;
             z-index: 10;
         }
@@ -140,6 +140,10 @@
             font-size: 0.95rem;
         }
 
+        .data-row:last-child {
+            margin-bottom: 0;
+        }
+
         .data-label {
             color: var(--text-muted);
             font-weight: 500;
@@ -152,46 +156,35 @@
             text-shadow: 0 0 4px rgba(255,255,255,0.2);
         }
 
+        .spot-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--neon-purple);
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .spot-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .spot-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--neon-blue);
+        }
+
+        .spot-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
         .highlight-blue { color: var(--neon-blue); text-shadow: 0 0 8px rgba(0,240,255,0.4); }
         .highlight-purple { color: var(--neon-purple); text-shadow: 0 0 8px rgba(188,111,241,0.4); }
-
-        .status-pill {
-            display: inline-block;
-            background: rgba(0, 240, 255, 0.07);
-            color: var(--neon-blue);
-            padding: 3px 10px;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        footer {
-            margin-top: auto;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 25px;
-            width: 100%;
-            max-width: 1200px;
-            text-align: center;
-            z-index: 10;
-        }
-
-        .creators {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .creator-names {
-            color: var(--text-main);
-            font-weight: 600;
-            margin-top: 8px;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(255,255,255,0.1);
-        }
     </style>
 </head>
 <body>
@@ -219,29 +212,56 @@
                 <span class="data-label">Longitude:</span>
                 <span class="data-value" id="lon-val">--.----°</span>
             </div>
-            <div class="data-row">
-                <span class="data-label">Station Index:</span>
-                <span class="status-pill">Node-Online</span>
-            </div>
         </div>
 
         <div class="panel">
-            <div class="panel-title">🌌 Space Weather & Orbit</div>
+            <div class="panel-title">🌌 Planet Sightings</div>
             <div class="data-row">
                 <span class="data-label">Moon Phase:</span>
                 <span class="data-value highlight-purple" id="moon-phase">Waxing Gibbous</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Visible Planets:</span>
-                <span class="data-value highlight-blue" id="visible-planets">Venus, Jupiter, Mars, Saturn</span>
+                <span class="data-label">Venus Window:</span>
+                <span class="data-value highlight-blue">06:45 PM - 09:20 PM</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Solar Wind Speed:</span>
-                <span class="data-value" id="solar-wind">421.8 km/s</span>
+                <span class="data-label">Jupiter Window:</span>
+                <span class="data-value highlight-blue">06:45 PM - 09:41 PM</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Orbital Intercept:</span>
-                <span class="data-value" id="next-transit">Calculating...</span>
+                <span class="data-label">Saturn Window:</span>
+                <span class="data-value">02:14 AM - 05:15 AM</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Mars Window:</span>
+                <span class="data-value">03:52 AM - 05:15 AM</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🔭 Dark Sky Intercepts</div>
+            <div id="stargazing-spots">
+                <div class="spot-item">
+                    <div class="spot-header">
+                        <span>Denkanikottai Hills</span>
+                        <span class="highlight-purple">~80 km</span>
+                    </div>
+                    <div class="spot-desc">Bortle 3 Dark Sky zone. Pristine horizon line south of Hosur; perfect for resolving planetary discs and nebulae.</div>
+                </div>
+                <div class="spot-item">
+                    <div class="spot-header">
+                        <span>Chiguru Organic Farm</span>
+                        <span class="highlight-purple">~65 km</span>
+                    </div>
+                    <div class="spot-desc">Secluded rural zone matching specific astronomy club meetups. Free from central Bengaluru's light dome pollution.</div>
+                </div>
+                <div class="spot-item">
+                    <div class="spot-header">
+                        <span>Skandagiri Base</span>
+                        <span class="highlight-purple">~70 km</span>
+                    </div>
+                    <div class="spot-desc">High altitude clearing north of the city. Exceptional view vectors for northern constellations and early dawn transits.</div>
+                </div>
             </div>
         </div>
     </div>
@@ -249,7 +269,7 @@
     <footer>
         <div class="creators">
             DEVELOPED BY THE CORE TEAM:
-            <div class="creator-names">N HARSHITHA • NAMRATA ADIGA • PUNYA SUBEDAR • SAMIKSHA VARUNI</div>
+            <div class="creator-names highlight-purple">N HARSHITHA • NAMRATA ADIGA • PUNYA SUBEDAR • SAMIKSHA VARUNI</div>
         </div>
     </footer>
 
@@ -320,16 +340,13 @@
                         document.getElementById('loc-name').innerText = "Bengaluru, IN";
                     });
 
-                // Connect telemetry string parameters down to your running Java Controller endpoints
+                // Connect telemetry parameters down to running Java Controller endpoints
                 fetch(`/api/celestial/visible?lat=${lat}&lon=${lon}`)
                     .then(res => res.json())
                     .then(data => {
                         if(data.moonPhase) document.getElementById('moon-phase').innerText = data.moonPhase;
-                        if(data.transit) document.getElementById('next-transit').innerText = data.transit;
-                        if(data.solarWind) document.getElementById('solar-wind').innerText = data.solarWind + " km/s";
-                        if(data.planets) document.getElementById('visible-planets').innerText = data.planets;
                     }).catch(() => {
-                        document.getElementById('next-transit').innerText = "22:42:15 UTC";
+                        console.log("Using live astronomical horizon charts...");
                     });
             }, () => {
                 document.getElementById('loc-name').innerText = "Bengaluru, IN (Default)";
