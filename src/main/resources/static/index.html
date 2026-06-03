@@ -275,7 +275,7 @@
             <div class="panel-title">📍 Ground Telemetry</div>
             <div class="data-row">
                 <span class="data-label">Region:</span>
-                <span class="data-value highlight-blue" id="loc-name">Locating System...</span>
+                <span class="data-value highlight-blue" id="loc-name">Locating...</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Latitude:</span>
@@ -284,6 +284,18 @@
             <div class="data-row">
                 <span class="data-label">Longitude:</span>
                 <span class="data-value" id="lon-val">--.----°</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Altitude (MSL):</span>
+                <span class="data-value highlight-blue" id="alt-val">920m</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">True Heading:</span>
+                <span class="data-value" id="hdg-val">352° N</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Rotational Velocity:</span>
+                <span class="data-value" id="rot-val">1628 km/h</span>
             </div>
         </div>
 
@@ -399,7 +411,6 @@
                 dy: 7 + Math.random() * 3,
                 alpha: 1
             };
-            // MUCH FASTER TIMER: Spawns a new meteor every 1 to 4 seconds instead of 12!
             setTimeout(spawnShootingStar, 1000 + Math.random() * 3000);
         }
 
@@ -451,7 +462,7 @@
 
                 shootingStar.x += shootingStar.dx;
                 shootingStar.y += shootingStar.dy;
-                shootingStar.alpha -= 0.03; // Slightly faster fade for snappier action
+                shootingStar.alpha -= 0.03;
 
                 if (shootingStar.alpha <= 0 || shootingStar.x < 0 || shootingStar.y > canvas.height) {
                     shootingStar = null;
@@ -494,18 +505,38 @@
         setInterval(updateClockAndVisibility, 1000);
         updateClockAndVisibility();
 
+        // Listen for internal device orientation changes to feed true heading vectors
+        window.addEventListener('deviceorientation', (e) => {
+            if(e.alpha !== null) {
+                document.getElementById('hdg-val').innerText = Math.round(360 - e.alpha) + "° N";
+            }
+        }, true);
+
         // --- TELEMETRY TRACKING PIPELINE ---
         function triggerSync() {
             const locLabel = document.getElementById('loc-name');
-            locLabel.innerText = "REFRESHING MATCH...";
+            locLabel.innerText = "REFRESHING...";
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(position => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
+                    const alt = position.coords.altitude;
                     
                     document.getElementById('lat-val').innerText = lat.toFixed(4) + "° N";
                     document.getElementById('lon-val').innerText = lon.toFixed(4) + "° E";
+
+                    // Calculate customized local rotation velocity factoring in latitude cosine geometry
+                    const earthEquatorSpeed = 1674.4;
+                    const localSpeed = earthEquatorSpeed * Math.cos(lat * Math.PI / 180);
+                    document.getElementById('rot-val').innerText = Math.round(localSpeed) + " km/h";
+
+                    if(alt !== null) {
+                        document.getElementById('alt-val').innerText = Math.round(alt) + "m";
+                    } else {
+                        // Standard topological elevation profile for Bengaluru urban areas
+                        document.getElementById('alt-val').innerText = "920m (MSL)";
+                    }
 
                     fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
                         .then(res => res.json())
