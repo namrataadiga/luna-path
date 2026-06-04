@@ -11,6 +11,7 @@
             --neon-blue: #00f0ff;
             --neon-purple: #bd5fff;
             --neon-green: #39ff14;
+            --neon-orange: #ff7b00;
             --text-main: #f1f5f9;
             --text-muted: #4b5563;
             --border-glow: rgba(0, 240, 255, 0.2);
@@ -233,30 +234,6 @@
 
         .highlight-blue { color: var(--neon-blue); text-shadow: 0 0 8px rgba(0,240,255,0.4); }
         .highlight-purple { color: var(--neon-purple); text-shadow: 0 0 12px rgba(189,95,255,0.8); font-weight: 800; }
-
-        footer {
-            margin-top: auto;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 25px;
-            width: 100%;
-            max-width: 1200px;
-            text-align: center;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .creators {
-            color: #64748b;
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .creator-names {
-            margin-top: 8px;
-            font-size: 0.95rem;
-            letter-spacing: 1.5px;
-        }
     </style>
 </head>
 <body>
@@ -278,6 +255,14 @@
                 <span class="data-value highlight-blue" id="loc-name">Locating...</span>
             </div>
             <div class="data-row">
+                <span class="data-label">Atmosphere:</span>
+                <span class="data-value highlight-blue" id="weather-cond">Mostly Cloudy</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Core Temperature:</span>
+                <span class="data-value" id="weather-temp">29°C</span>
+            </div>
+            <div class="data-row">
                 <span class="data-label">Latitude:</span>
                 <span class="data-value" id="lat-val">--.----°</span>
             </div>
@@ -286,12 +271,8 @@
                 <span class="data-value" id="lon-val">--.----°</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Altitude (MSL):</span>
-                <span class="data-value highlight-blue" id="alt-val">920m</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">True Heading:</span>
-                <span class="data-value" id="hdg-val">352° N</span>
+                <span class="data-label">Solar Wind Stream:</span>
+                <span class="data-value" id="solar-wind-val">420.0 km/s</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Rotational Velocity:</span>
@@ -300,26 +281,30 @@
         </div>
 
         <div class="panel">
-            <div class="panel-title">🌌 Planet Sightings</div>
+            <div class="panel-title">🌌 Sky Sightings (Tonight)</div>
             <div class="data-row">
                 <span class="data-label">Moon Phase:</span>
-                <span class="data-value highlight-purple" id="moon-phase">Waxing Gibbous</span>
+                <span class="data-value highlight-purple" id="moon-phase">Syncing Orbit...</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Venus Window:</span>
-                <span class="data-value"><span id="v-pill" class="sub-pill">BELOW HORIZON</span> 18:45 - 21:20</span>
+                <span class="data-label">🪐 Venus (Planet):</span>
+                <span class="data-value"><span id="v-pill" class="sub-pill">TRACKING</span> 18:45 - 21:20</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Jupiter Window:</span>
-                <span class="data-value"><span id="j-pill" class="sub-pill">BELOW HORIZON</span> 18:45 - 21:41</span>
+                <span class="data-label">🪐 Jupiter (Planet):</span>
+                <span class="data-value"><span id="j-pill" class="sub-pill">TRACKING</span> 18:45 - 21:37</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Saturn Window:</span>
-                <span class="data-value"><span id="s-pill" class="sub-pill">BELOW HORIZON</span> 02:14 - 05:15</span>
+                <span class="data-label">✨ Spica (Star):</span>
+                <span class="data-value"><span id="star1-pill" class="sub-pill">TRACKING</span> 19:15 - 02:40</span>
             </div>
             <div class="data-row">
-                <span class="data-label">Mars Window:</span>
-                <span class="data-value"><span id="m-pill" class="sub-pill">BELOW HORIZON</span> 03:52 - 05:15</span>
+                <span class="data-label">✨ Pollux & Castor:</span>
+                <span class="data-value"><span id="star2-pill" class="sub-pill">TRACKING</span> 18:50 - 22:15</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">🪐 Saturn (Planet):</span>
+                <span class="data-value"><span id="s-pill" class="sub-pill">TRACKING</span> 02:11 - 05:30</span>
             </div>
         </div>
 
@@ -361,11 +346,11 @@
     </footer>
 
     <script>
-        // --- STARFIELD & INTERACTIVE MOVING VECTORS ENGINE ---
+        // --- STARFIELD & BURNING METEOROID PHYSICS ENGINE ---
         const canvas = document.getElementById('star-canvas');
         const ctx = canvas.getContext('2d');
         let stars = [];
-        let shootingStar = null;
+        let meteoroids = [];
         let mouse = { x: null, y: null, maxDistance: 120 };
 
         function resizeCanvas() {
@@ -390,41 +375,33 @@
             }
         }
 
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
 
-        window.addEventListener('mouseout', () => {
-            mouse.x = null;
-            mouse.y = null;
-        });
-
-        function spawnShootingStar() {
-            if (shootingStar) return;
-            shootingStar = {
-                x: Math.random() * canvas.width,
-                y: Math.random() * (canvas.height / 2),
-                len: 35 + Math.random() * 45,
-                speed: 14 + Math.random() * 10,
-                dx: -(7 + Math.random() * 3),
-                dy: 7 + Math.random() * 3,
-                alpha: 1
-            };
-            setTimeout(spawnShootingStar, 1000 + Math.random() * 3000);
+        // Physics-driven falling meteoroid injector
+        function spawnMeteoroid() {
+            if (meteoroids.length < 3) { // Limit concurrent falling rocks to preserve processing cycles
+                meteoroids.push({
+                    x: Math.random() * canvas.width,
+                    y: -50,
+                    size: 3 + Math.random() * 4, // Physical mass thickness
+                    speedX: -8 - Math.random() * 8,
+                    speedY: 8 + Math.random() * 8,
+                    sparks: [],
+                    alpha: 1.0
+                });
+            }
+            setTimeout(spawnMeteoroid, 800 + Math.random() * 2000); // Highly recurrent incidence cycles
         }
 
         function drawStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // 1. Render background constellation field
             stars.forEach(star => {
-                star.x += star.vx;
-                star.y += star.vy;
-
-                if (star.x < 0) star.x = canvas.width;
-                if (star.x > canvas.width) star.x = 0;
-                if (star.y < 0) star.y = canvas.height;
-                if (star.y > canvas.height) star.y = 0;
+                star.x += star.vx; star.y += star.vy;
+                if (star.x < 0) star.x = canvas.width; if (star.x > canvas.width) star.x = 0;
+                if (star.y < 0) star.y = canvas.height; if (star.y > canvas.height) star.y = 0;
 
                 star.alpha += star.speed;
                 if(star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
@@ -436,38 +413,65 @@
                 ctx.fill();
 
                 if (mouse.x !== null && mouse.y !== null) {
-                    let dx = star.x - mouse.x;
-                    let dy = star.y - mouse.y;
+                    let dx = star.x - mouse.x; let dy = star.y - mouse.y;
                     let dist = Math.sqrt(dx * dx + dy * dy);
-
                     if (dist < mouse.maxDistance) {
                         let lineAlpha = (1 - (dist / mouse.maxDistance)) * 0.25;
                         ctx.strokeStyle = `rgba(0, 240, 255, ${lineAlpha})`;
                         ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(star.x, star.y);
-                        ctx.lineTo(mouse.x, mouse.y);
-                        ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(star.x, star.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
                     }
                 }
             });
 
-            if (shootingStar) {
-                ctx.strokeStyle = 'rgba(0, 240, 255, ' + shootingStar.alpha + ')';
-                ctx.lineWidth = 2;
+            // 2. Physics Execution for Falling Meteoroids with heat distortion particle tails
+            for (let i = meteoroids.length - 1; i >= 0; i--) {
+                let m = meteoroids[i];
+                m.x += m.speedX;
+                m.y += m.speedY;
+
+                // Inject burning friction trail particles
+                if (Math.random() > 0.2) {
+                    m.sparks.push({
+                        x: m.x,
+                        y: m.y,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        life: 1.0,
+                        decay: 0.04 + Math.random() * 0.04
+                    });
+                }
+
+                // Draw heat-trail particles
+                m.sparks.forEach((spark, sIdx) => {
+                    spark.x += spark.vx;
+                    spark.y += spark.vy;
+                    spark.life -= spark.decay;
+                    if (spark.life <= 0) {
+                        m.sparks.splice(sIdx, 1);
+                    } else {
+                        ctx.fillStyle = `rgba(255, 123, 0, ${spark.life * m.alpha})`;
+                        ctx.beginPath();
+                        ctx.arc(spark.x, spark.y, 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Render main core body of the falling meteoroid
+                ctx.fillStyle = `rgba(0, 240, 255, ${m.alpha})`;
+                ctx.shadowColor = '#00f0ff';
+                ctx.shadowBlur = 10;
                 ctx.beginPath();
-                ctx.moveTo(shootingStar.x, shootingStar.y);
-                ctx.lineTo(shootingStar.x + shootingStar.dx, shootingStar.y + shootingStar.dy);
-                ctx.stroke();
+                ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset canvas glow states
 
-                shootingStar.x += shootingStar.dx;
-                shootingStar.y += shootingStar.dy;
-                shootingStar.alpha -= 0.03;
-
-                if (shootingStar.alpha <= 0 || shootingStar.x < 0 || shootingStar.y > canvas.height) {
-                    shootingStar = null;
+                // Bound check removal conditions
+                if (m.y > canvas.height || m.x < -100) {
+                    meteoroids.splice(i, 1);
                 }
             }
+
             ctx.globalAlpha = 1.0;
             requestAnimationFrame(drawStars);
         }
@@ -475,7 +479,7 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
         drawStars();
-        setTimeout(spawnShootingStar, 1500);
+        setTimeout(spawnMeteoroid, 1000);
 
         // --- HUD CLOCK & REAL-TIME VISIBILITY ENGINE ---
         function updateClockAndVisibility() {
@@ -497,25 +501,42 @@
                 }
             };
 
-            checkVisible(18.75, 21.33, 'v-pill'); // Venus
-            checkVisible(18.75, 21.68, 'j-pill'); // Jupiter
-            checkVisible(2.23, 5.25, 's-pill');   // Saturn
-            checkVisible(3.86, 5.25, 'm-pill');   // Mars
+            // Evaluate times against celestial windows
+            checkVisible(18.75, 21.33, 'v-pill');     // Venus
+            checkVisible(18.75, 21.61, 'j-pill');     // Jupiter
+            checkVisible(19.25, 2.66, 'star1-pill');  // Star Spica
+            checkVisible(18.83, 22.25, 'star2-pill'); // Stars Castor/Pollux
+            checkVisible(2.18, 5.50, 's-pill');       // Saturn
+
+            const simulatedSolarWind = 420 + Math.sin(now.getTime() / 5000) * 4.5 + Math.random() * 0.5;
+            document.getElementById('solar-wind-val').innerText = simulatedSolarWind.toFixed(1) + " km/s";
         }
         setInterval(updateClockAndVisibility, 1000);
         updateClockAndVisibility();
 
-        // Listen for internal device orientation changes to feed true heading vectors
-        window.addEventListener('deviceorientation', (e) => {
-            if(e.alpha !== null) {
-                document.getElementById('hdg-val').innerText = Math.round(360 - e.alpha) + "° N";
-            }
-        }, true);
+        // --- REAL-TIME LUNAR MATHEMATICAL CALCULATION ENGINE ---
+        function calculateLiveMoonPhase() {
+            const now = new Date();
+            let year = now.getFullYear(); let month = now.getMonth() + 1; const day = now.getDate();
+            if (month < 3) { year--; month += 12; }
+            month++;
+            let jd = (365.25 * year) + (30.6 * month) + day - 694039.09; 
+            jd /= 29.5305882; 
+            let phaseIndex = Math.round((jd - parseInt(jd)) * 8); 
+            if (phaseIndex >= 8) phaseIndex = 0;
+
+            const phases = [
+                "New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous",
+                "Full Moon", "Waning Gibbous", "Third Quarter", "Waning Crescent"
+            ];
+            document.getElementById('moon-phase').innerText = phases[phaseIndex];
+        }
 
         // --- TELEMETRY TRACKING PIPELINE ---
         function triggerSync() {
             const locLabel = document.getElementById('loc-name');
             locLabel.innerText = "REFRESHING...";
+            calculateLiveMoonPhase(); 
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(position => {
@@ -526,7 +547,6 @@
                     document.getElementById('lat-val').innerText = lat.toFixed(4) + "° N";
                     document.getElementById('lon-val').innerText = lon.toFixed(4) + "° E";
 
-                    // Calculate customized local rotation velocity factoring in latitude cosine geometry
                     const earthEquatorSpeed = 1674.4;
                     const localSpeed = earthEquatorSpeed * Math.cos(lat * Math.PI / 180);
                     document.getElementById('rot-val').innerText = Math.round(localSpeed) + " km/h";
@@ -534,10 +554,10 @@
                     if(alt !== null) {
                         document.getElementById('alt-val').innerText = Math.round(alt) + "m";
                     } else {
-                        // Standard topological elevation profile for Bengaluru urban areas
                         document.getElementById('alt-val').innerText = "920m (MSL)";
                     }
 
+                    // Reverse geocoding to lock neighborhood name
                     fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
                         .then(res => res.json())
                         .then(geoData => {
@@ -547,10 +567,12 @@
                             locLabel.innerText = "Bengaluru, IN";
                         });
 
-                    fetch(`/api/celestial/visible?lat=${lat}&lon=${lon}`)
+                    // Live OpenWeather API hook matching current weather query parameters
+                    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=810a7fbafbbebb9528bc4b73b5b43fe4&units=metric`)
                         .then(res => res.json())
-                        .then(data => {
-                            if(data.moonPhase) document.getElementById('moon-phase').innerText = data.moonPhase;
+                        .then(weatherData => {
+                            document.getElementById('weather-cond').innerText = weatherData.weather[0].main;
+                            document.getElementById('weather-temp').innerText = Math.round(weatherData.main.temp) + "°C";
                         });
                 });
             }
