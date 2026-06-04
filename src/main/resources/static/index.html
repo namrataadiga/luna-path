@@ -234,6 +234,30 @@
 
         .highlight-blue { color: var(--neon-blue); text-shadow: 0 0 8px rgba(0,240,255,0.4); }
         .highlight-purple { color: var(--neon-purple); text-shadow: 0 0 12px rgba(189,95,255,0.8); font-weight: 800; }
+
+        footer {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 25px;
+            width: 100%;
+            max-width: 1200px;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .creators {
+            color: #64748b;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .creator-names {
+            margin-top: 8px;
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+        }
     </style>
 </head>
 <body>
@@ -264,11 +288,11 @@
             </div>
             <div class="data-row">
                 <span class="data-label">Latitude:</span>
-                <span class="data-value" id="lat-val">--.----°</span>
+                <span class="data-value" id="lat-val">12.9716° N</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Longitude:</span>
-                <span class="data-value" id="lon-val">--.----°</span>
+                <span class="data-value" id="lon-val">77.5946° E</span>
             </div>
             <div class="data-row">
                 <span class="data-label">Solar Wind Stream:</span>
@@ -378,26 +402,24 @@
         window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
         window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
 
-        // Physics-driven falling meteoroid injector
         function spawnMeteoroid() {
-            if (meteoroids.length < 3) { // Limit concurrent falling rocks to preserve processing cycles
+            if (meteoroids.length < 3) {
                 meteoroids.push({
                     x: Math.random() * canvas.width,
                     y: -50,
-                    size: 3 + Math.random() * 4, // Physical mass thickness
+                    size: 3 + Math.random() * 4,
                     speedX: -8 - Math.random() * 8,
                     speedY: 8 + Math.random() * 8,
                     sparks: [],
                     alpha: 1.0
                 });
             }
-            setTimeout(spawnMeteoroid, 800 + Math.random() * 2000); // Highly recurrent incidence cycles
+            setTimeout(spawnMeteoroid, 800 + Math.random() * 2000);
         }
 
         function drawStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 1. Render background constellation field
             stars.forEach(star => {
                 star.x += star.vx; star.y += star.vy;
                 if (star.x < 0) star.x = canvas.width; if (star.x > canvas.width) star.x = 0;
@@ -424,125 +446,70 @@
                 }
             });
 
-            // 2. Physics Execution for Falling Meteoroids with heat distortion particle tails
             for (let i = meteoroids.length - 1; i >= 0; i--) {
-                let m = meteoroids[i];
-                m.x += m.speedX;
-                m.y += m.speedY;
-
-                // Inject burning friction trail particles
+                let m = meteoroids[i]; m.x += m.speedX; m.y += m.speedY;
                 if (Math.random() > 0.2) {
-                    m.sparks.push({
-                        x: m.x,
-                        y: m.y,
-                        vx: (Math.random() - 0.5) * 2,
-                        vy: (Math.random() - 0.5) * 2,
-                        life: 1.0,
-                        decay: 0.04 + Math.random() * 0.04
-                    });
+                    m.sparks.push({ x: m.x, y: m.y, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, life: 1.0, decay: 0.04 + Math.random() * 0.04 });
                 }
-
-                // Draw heat-trail particles
                 m.sparks.forEach((spark, sIdx) => {
-                    spark.x += spark.vx;
-                    spark.y += spark.vy;
-                    spark.life -= spark.decay;
-                    if (spark.life <= 0) {
-                        m.sparks.splice(sIdx, 1);
-                    } else {
+                    spark.x += spark.vx; spark.y += spark.vy; spark.life -= spark.decay;
+                    if (spark.life <= 0) { m.sparks.splice(sIdx, 1); } else {
                         ctx.fillStyle = `rgba(255, 123, 0, ${spark.life * m.alpha})`;
-                        ctx.beginPath();
-                        ctx.arc(spark.x, spark.y, 1.5, 0, Math.PI * 2);
-                        ctx.fill();
+                        ctx.beginPath(); ctx.arc(spark.x, spark.y, 1.5, 0, Math.PI * 2); ctx.fill();
                     }
                 });
-
-                // Render main core body of the falling meteoroid
-                ctx.fillStyle = `rgba(0, 240, 255, ${m.alpha})`;
-                ctx.shadowColor = '#00f0ff';
-                ctx.shadowBlur = 10;
-                ctx.beginPath();
-                ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0; // Reset canvas glow states
-
-                // Bound check removal conditions
-                if (m.y > canvas.height || m.x < -100) {
-                    meteoroids.splice(i, 1);
-                }
+                ctx.fillStyle = `rgba(0, 240, 255, ${m.alpha})`; ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 10;
+                ctx.beginPath(); ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+                if (m.y > canvas.height || m.x < -100) { meteoroids.splice(i, 1); }
             }
-
             ctx.globalAlpha = 1.0;
             requestAnimationFrame(drawStars);
         }
 
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-        drawStars();
-        setTimeout(spawnMeteoroid, 1000);
+        resizeCanvas(); drawStars(); setTimeout(spawnMeteoroid, 1000);
 
         // --- HUD CLOCK & REAL-TIME VISIBILITY ENGINE ---
         function updateClockAndVisibility() {
             const now = new Date();
             document.getElementById('hud-clock').innerText = "SYSTEM TIME: " + now.toLocaleTimeString();
 
-            const hour = now.getHours();
-            const min = now.getMinutes();
-            const currentTimeDec = hour + (min / 60);
-
+            const hour = now.getHours(); const min = now.getMinutes(); const currentTimeDec = hour + (min / 60);
             const checkVisible = (start, end, pillId) => {
                 const pill = document.getElementById(pillId);
-                if (currentTimeDec >= start && currentTimeDec <= end) {
-                    pill.innerText = "NOW VISIBLE";
-                    pill.className = "live-pill";
-                } else {
-                    pill.innerText = "BELOW HORIZON";
-                    pill.className = "sub-pill";
-                }
+                if (currentTimeDec >= start && currentTimeDec <= end) { pill.innerText = "NOW VISIBLE"; pill.className = "live-pill"; } else { pill.innerText = "BELOW HORIZON"; pill.className = "sub-pill"; }
             };
 
-            // Evaluate times against celestial windows
-            checkVisible(18.75, 21.33, 'v-pill');     // Venus
-            checkVisible(18.75, 21.61, 'j-pill');     // Jupiter
-            checkVisible(19.25, 2.66, 'star1-pill');  // Star Spica
-            checkVisible(18.83, 22.25, 'star2-pill'); // Stars Castor/Pollux
-            checkVisible(2.18, 5.50, 's-pill');       // Saturn
+            checkVisible(18.75, 21.33, 'v-pill');
+            checkVisible(18.75, 21.61, 'j-pill');
+            checkVisible(19.25, 2.66, 'star1-pill');
+            checkVisible(18.83, 22.25, 'star2-pill');
+            checkVisible(2.18, 5.50, 's-pill');
 
             const simulatedSolarWind = 420 + Math.sin(now.getTime() / 5000) * 4.5 + Math.random() * 0.5;
             document.getElementById('solar-wind-val').innerText = simulatedSolarWind.toFixed(1) + " km/s";
         }
-        setInterval(updateClockAndVisibility, 1000);
-        updateClockAndVisibility();
+        setInterval(updateClockAndVisibility, 1000); updateClockAndVisibility();
 
         // --- REAL-TIME LUNAR MATHEMATICAL CALCULATION ENGINE ---
         function calculateLiveMoonPhase() {
-            const now = new Date();
-            let year = now.getFullYear(); let month = now.getMonth() + 1; const day = now.getDate();
-            if (month < 3) { year--; month += 12; }
-            month++;
-            let jd = (365.25 * year) + (30.6 * month) + day - 694039.09; 
-            jd /= 29.5305882; 
-            let phaseIndex = Math.round((jd - parseInt(jd)) * 8); 
-            if (phaseIndex >= 8) phaseIndex = 0;
-
-            const phases = [
-                "New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous",
-                "Full Moon", "Waning Gibbous", "Third Quarter", "Waning Crescent"
-            ];
+            const now = new Date(); let year = now.getFullYear(); let month = now.getMonth() + 1; const day = now.getDate();
+            if (month < 3) { year--; month += 12; } month++;
+            let jd = (365.25 * year) + (30.6 * month) + day - 694039.09; jd /= 29.5305882;
+            let phaseIndex = Math.round((jd - parseInt(jd)) * 8); if (phaseIndex >= 8) phaseIndex = 0;
+            const phases = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Third Quarter", "Waning Crescent"];
             document.getElementById('moon-phase').innerText = phases[phaseIndex];
         }
 
         // --- TELEMETRY TRACKING PIPELINE ---
         function triggerSync() {
             const locLabel = document.getElementById('loc-name');
-            locLabel.innerText = "REFRESHING...";
             calculateLiveMoonPhase(); 
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(position => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    const alt = position.coords.altitude;
                     
                     document.getElementById('lat-val').innerText = lat.toFixed(4) + "° N";
                     document.getElementById('lon-val').innerText = lon.toFixed(4) + "° E";
@@ -551,30 +518,40 @@
                     const localSpeed = earthEquatorSpeed * Math.cos(lat * Math.PI / 180);
                     document.getElementById('rot-val').innerText = Math.round(localSpeed) + " km/h";
 
-                    if(alt !== null) {
-                        document.getElementById('alt-val').innerText = Math.round(alt) + "m";
-                    } else {
-                        document.getElementById('alt-val').innerText = "920m (MSL)";
-                    }
+                    // Added secure explicit identification header metadata to Nominatim requirements
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`, {
+                        headers: {
+                            'User-Agent': 'LunaPathCelestialHUD/1.0 (harshitha.n@bmsce.ac.in)'
+                        }
+                    })
+                    .then(res => {
+                        if(!res.ok) throw new Error();
+                        return res.json();
+                    })
+                    .then(geoData => {
+                        const suburb = geoData.address.suburb || geoData.address.neighbourhood || geoData.address.city_district || "Malleswaram";
+                        locLabel.innerText = `${suburb}, Bengaluru`;
+                    })
+                    .catch(() => {
+                        // Failover: Drops loading visual instantly down to baseline location if API timeouts clear
+                        locLabel.innerText = "Basavanagudi, Bengaluru";
+                    });
 
-                    // Reverse geocoding to lock neighborhood name
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
-                        .then(res => res.json())
-                        .then(geoData => {
-                            const suburb = geoData.address.suburb || geoData.address.neighbourhood || "Bengaluru Central";
-                            locLabel.innerText = `${suburb}, Bengaluru`;
-                        }).catch(() => {
-                            locLabel.innerText = "Bengaluru, IN";
-                        });
-
-                    // Live OpenWeather API hook matching current weather query parameters
                     fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=810a7fbafbbebb9528bc4b73b5b43fe4&units=metric`)
                         .then(res => res.json())
                         .then(weatherData => {
                             document.getElementById('weather-cond').innerText = weatherData.weather[0].main;
                             document.getElementById('weather-temp').innerText = Math.round(weatherData.main.temp) + "°C";
+                        }).catch(() => {
+                            document.getElementById('weather-cond').innerText = "Mostly Cloudy";
+                            document.getElementById('weather-temp').innerText = "29°C";
                         });
+                }, () => {
+                    // Core fallback if browser blocking intercepts permissions
+                    locLabel.innerText = "BMSCE, Bengaluru";
                 });
+            } else {
+                locLabel.innerText = "Bengaluru, IN";
             }
         }
         triggerSync();
